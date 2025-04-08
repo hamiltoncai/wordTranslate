@@ -1,0 +1,250 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Microsoft YaHei', Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f5f5;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 20px;
+    gap: 20px;
+}
+
+.main-content {
+    display: flex;
+    flex: 1;
+    gap: 20px;
+}
+
+.format-info-panel {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-top: 20px;
+    overflow: hidden;
+}
+
+.format-info-panel pre {
+    background-color: #f8f8f8;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 10px;
+    overflow-x: auto;
+    font-family: monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.format-info-content h3 {
+    margin-bottom: 10px;
+    color: #2c3e50;
+    font-size: 1.2rem;
+}
+
+.config-panel {
+    flex: 0 0 300px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.document-panel, .translation-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    overflow: hidden;
+}
+
+h2 {
+    margin-bottom: 20px;
+    color: #2c3e50;
+    font-size: 1.5rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.config-item {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+select, input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+button:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.content-area {
+    flex: 1;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    overflow-y: auto;
+    background-color: #fafafa;
+    
+    /* 添加对mammoth.js转换后的格式类的支持 */
+    /* 颜色类 */
+    span.red { color: #FF0000; }
+    span.blue { color: #0000FF; }
+    span.color-red { color: #FF0000; }
+    span.color-blue { color: #0000FF; }
+    span.color-green { color: #008000; }
+    span.color-purple { color: #800080; }
+    span.color-yellow { color: #FFFF00; }
+    span.color-orange { color: #FFA500; }
+    span.color-black { color: #000000; }
+    
+    /* 支持十六进制颜色值 */
+    /* 移除默认颜色设置，避免覆盖特定颜色类 */
+    
+    /* 字体样式类 */
+    span.bold { font-weight: bold; }
+    span.italic { font-style: italic; }
+    span.underline { text-decoration: underline; }
+    
+    /* 字号类 */
+    span.size-8 { font-size: 8pt; }
+    span.size-9 { font-size: 9pt; }
+    span.size-10 { font-size: 10pt; }
+    span.size-11 { font-size: 11pt; }
+    span.size-12 { font-size: 12pt; }
+    span.size-14 { font-size: 14pt; }
+    span.size-16 { font-size: 16pt; }
+    span.size-18 { font-size: 18pt; }
+    span.size-20 { font-size: 20pt; }
+    span.size-22 { font-size: 22pt; }
+    span.size-24 { font-size: 24pt; }
+    span.size-26 { font-size: 26pt; }
+    span.size-28 { font-size: 28pt; }
+    span.size-36 { font-size: 36pt; }
+    span.size-48 { font-size: 48pt; }
+    span.size-72 { font-size: 72pt; }
+    
+    /* 字体类 */
+    span.font-SimSun { font-family: 'SimSun', serif; }
+    span.font-SimHei { font-family: 'SimHei', sans-serif; }
+    span.font-Microsoft-YaHei { font-family: 'Microsoft YaHei', sans-serif; }
+    span.font-Microsoft-JhengHei { font-family: 'Microsoft JhengHei', sans-serif; }
+    span.font-KaiTi { font-family: 'KaiTi', serif; }
+    span.font-FangSong { font-family: 'FangSong', serif; }
+    span.font-Arial { font-family: 'Arial', sans-serif; }
+    span.font-Times-New-Roman { font-family: 'Times New Roman', serif; }
+    span.font-Calibri { font-family: 'Calibri', sans-serif; }
+    min-height: 300px;
+}
+
+#translated-content {
+    background-color: #fff;
+}
+
+#translated-content:focus {
+    outline: 2px solid #3498db;
+}
+
+#connection-status {
+    margin-left: 10px;
+    font-size: 14px;
+}
+
+.success {
+    color: #27ae60;
+}
+
+.error {
+    color: #e74c3c;
+}
+
+#save-btn {
+    margin-top: 15px;
+    align-self: flex-end;
+}
+
+/* 文档内容样式 */
+.paragraph {
+    margin-bottom: 10px;
+}
+
+.heading1 {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 20px 0 10px 0;
+}
+
+.heading2 {
+    font-size: 20px;
+    font-weight: bold;
+    margin: 15px 0 10px 0;
+}
+
+.heading3 {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 10px 0 5px 0;
+}
+
+.table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 10px 0;
+}
+
+.table td, .table th {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+.list-item {
+    margin-left: 20px;
+}

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word文档翻译工具</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="config-panel">
+                <h2>配置</h2>
+                <div class="config-item">
+                    <label for="model-type">选择模型类型：</label>
+                    <select id="model-type">
+                        <option value="openai">OpenAI</option>
+                        <option value="ollama">Ollama</option>
+                    </select>
+                </div>
+                <div class="config-item" id="openai-config">
+                    <label for="openai-api-key">OpenAI API Key：</label>
+                    <input type="password" id="openai-api-key" value="deepseek-r1-distill-qwen-7b-250120">
+                    <label for="openai-model">OpenAI 模型：</label>
+                    <select id="openai-model">
+                        <option value="deepseek-r1-distill-qwen-7b-250120">deepseek-r1-distill-qwen-7b-250120</option>
+                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                        <option value="gpt-4">GPT-4</option>
+                        
+                    </select>
+                </div>
+                <div class="config-item" id="ollama-config" style="display: none;">
+                    <label for="ollama-endpoint">Ollama 端点：</label>
+                    <input type="text" id="ollama-endpoint" value="http://localhost:11434">
+                    <label for="ollama-model">Ollama 模型：</label>
+                    <input type="text" id="ollama-model" value="llama3.2:1b">
+                </div>
+                <div class="config-item">
+                    <button id="test-connection">测试连接</button>
+                    <span id="connection-status"></span>
+                </div>
+                <div class="config-item">
+                    <label for="target-language">目标语言：</label>
+                    <select id="target-language">
+                        <option value="en">英语</option>
+                        <option value="zh">中文</option>
+                        <option value="ja">日语</option>
+                        <option value="ko">韩语</option>
+                        <option value="fr">法语</option>
+                        <option value="de">德语</option>
+                        <option value="es">西班牙语</option>
+                        <option value="ru">俄语</option>
+                    </select>
+                </div>
+                <div class="action-buttons">
+                    <button id="upload-btn">打开文件</button>
+                    <input type="file" id="file-input" accept=".docx" style="display: none;">
+                    <button id="translate-btn" disabled>翻译</button>
+                </div>
+            </div>
+            <div class="document-panel">
+                <h2>原文档</h2>
+                <div id="original-content" class="content-area"></div>
+            </div>
+            <div class="translation-panel">
+                <h2>翻译结果</h2>
+                <div id="translated-content" class="content-area" contenteditable="true"></div>
+                <button id="save-btn" disabled>保存为Word文件</button>
+            </div>
+        </div>
+        <div class="format-info-panel">
+            <h2>格式信息</h2>
+            <div id="format-info" class="content-area"></div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/7.1.0/docx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
