@@ -16,11 +16,12 @@
                     <select id="model-type">
                         <option value="openai">OpenAI</option>
                         <option value="ollama">Ollama</option>
+                        <option value="volces">火山引擎</option>
                     </select>
                 </div>
                 <div class="config-item" id="openai-config">
                     <label for="openai-api-key">OpenAI API Key：</label>
-                    <input type="password" id="openai-api-key" value="deepseek-r1-distill-qwen-7b-250120">
+                    <input type="password" id="openai-api-key">
                     <label for="openai-model">OpenAI 模型：</label>
                     <select id="openai-model">
                         <option value="deepseek-r1-distill-qwen-7b-250120">deepseek-r1-distill-qwen-7b-250120</option>
@@ -34,6 +35,16 @@
                     <input type="text" id="ollama-endpoint" value="http://localhost:11434">
                     <label for="ollama-model">Ollama 模型：</label>
                     <input type="text" id="ollama-model" value="llama3.2:1b">
+                </div>
+                <div class="config-item" id="volces-config" style="display: none;">
+                    <label for="volces-api-key">火山引擎 API Key：</label>
+                    <input type="text" id="volces-api-key", value="2c02a5f2-59e3-4759-92c0-7bc997e10183">
+                    <label for="volces-model">火山引擎模型：</label>
+                    <select id="volces-model">
+                        <option value="deepseek-v3-250324">deepseek-v3-250324</option>
+                        <option value="llama3-70b-250324">llama3-70b-250324</option>
+                        <option value="qwen2-72b-instruct">qwen2-72b-instruct</option>
+                    </select>
                 </div>
                 <div class="config-item">
                     <button id="test-connection">测试连接</button>

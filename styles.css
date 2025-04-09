@@ -187,6 +187,13 @@ button:disabled {
 
 #translated-content {
     background-color: #fff;
+    /* 确保加粗样式能够正确显示 */
+    font-weight: inherit;
+}
+
+#translated-content span.bold {
+    font-weight: bold !important;
+    display: inline-block;
 }
 
 #translated-content:focus {

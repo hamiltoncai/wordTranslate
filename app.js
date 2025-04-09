@@ -17,14 +17,23 @@ document.addEventListener('DOMContentLoaded', () => {
     let originalDocumentStructure = null;
     let currentFile = null;
     
+    // 获取火山引擎配置元素
+    const volcesConfig = document.getElementById('volces-config');
+    
     // 切换模型类型显示对应的配置
     modelTypeSelect.addEventListener('change', () => {
         if (modelTypeSelect.value === 'openai') {
             openaiConfig.style.display = 'block';
             ollamaConfig.style.display = 'none';
-        } else {
+            volcesConfig.style.display = 'none';
+        } else if (modelTypeSelect.value === 'ollama') {
             openaiConfig.style.display = 'none';
             ollamaConfig.style.display = 'block';
+            volcesConfig.style.display = 'none';
+        } else if (modelTypeSelect.value === 'volces') {
+            openaiConfig.style.display = 'none';
+            ollamaConfig.style.display = 'none';
+            volcesConfig.style.display = 'block';
         }
     });
     
@@ -110,6 +119,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 return response.ok && (data.response !== undefined || data.model !== undefined || data.created_at !== undefined);
             } catch (error) {
                 console.error('Ollama API 错误:', error);
+                return false;
+            }
+        } else if (modelType === 'volces') {
+            const apiKey = document.getElementById('volces-api-key').value;
+            const model = document.getElementById('volces-model').value;
+            
+            if (!apiKey) {
+                throw new Error('请输入火山引擎 API Key');
+            }
+            
+            try {
+                const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        messages: [
+                            {role: 'system', content: '你是人工智能助手.'},
+                            {role: 'user', content: 'Hello'}
+                        ]
+                    })
+                });
+                
+                const data = await response.json();
+                return response.ok && data.choices && data.choices.length > 0;
+            } catch (error) {
+                console.error('火山引擎 API 错误:', error);
                 return false;
             }
         }
@@ -285,6 +324,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // 检查元素内是否有带样式的子元素
             const styledChildren = [];
+            
+            // 处理span标签
             element.querySelectorAll('span').forEach(span => {
                 // 获取span的类名，这些类名可能包含mammoth.js转换的样式信息
                 const classList = Array.from(span.classList);
@@ -294,6 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Span类名:', classList, 'Span内容:', span.textContent);
                 
                 styledChildren.push({
+                    type: 'span',
                     text: span.textContent,
                     classList: classList,
                     className: span.className, // 保存完整的className字符串
@@ -306,6 +348,38 @@ document.addEventListener('DOMContentLoaded', () => {
                         textDecoration: spanStyles.textDecoration
                     },
                     outerHTML: span.outerHTML // 保存完整的HTML，包括标签和属性
+                });
+            });
+            
+            // 处理strong标签（加粗）
+            element.querySelectorAll('strong').forEach(strong => {
+                const strongStyles = window.getComputedStyle(strong);
+                
+                console.log('Strong标签内容:', strong.textContent);
+                
+                styledChildren.push({
+                    type: 'strong',
+                    text: strong.textContent,
+                    styles: {
+                        fontWeight: 'bold'
+                    },
+                    outerHTML: strong.outerHTML
+                });
+            });
+            
+            // 处理em标签（斜体）
+            element.querySelectorAll('em').forEach(em => {
+                const emStyles = window.getComputedStyle(em);
+                
+                console.log('Em标签内容:', em.textContent);
+                
+                styledChildren.push({
+                    type: 'em',
+                    text: em.textContent,
+                    styles: {
+                        fontStyle: 'italic'
+                    },
+                    outerHTML: em.outerHTML
                 });
             });
             
@@ -434,8 +508,54 @@ document.addEventListener('DOMContentLoaded', () => {
                             // 记录原始样式信息，用于调试
                             console.log('原始样式子元素:', item.styledChildren);
                             
-                            // 如果有多个带样式的子元素，尝试智能分配翻译文本
-                            if (item.styledChildren.length > 1) {
+                            // 检查是否有strong或em标签
+                            const hasStrongOrEm = item.styledChildren.some(child => 
+                                child.type === 'strong' || child.type === 'em'
+                            );
+                            
+                            // 如果有strong或em标签，使用原始HTML结构替换文本内容
+                            if (hasStrongOrEm) {
+                                // 创建临时容器
+                                const tempContainer = document.createElement('div');
+                                tempContainer.innerHTML = item.html;
+                                
+                                // 替换所有文本节点内容，但保留标签结构
+                                const replaceText = (node, text) => {
+                                    if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+                                        node.textContent = text;
+                                        return true;
+                                    } else if (node.nodeType === Node.ELEMENT_NODE) {
+                                        // 如果是strong或em标签，保留标签但替换内部文本
+                                        if (node.tagName.toLowerCase() === 'strong' || 
+                                            node.tagName.toLowerCase() === 'em') {
+                                            // 检查是否有嵌套标签
+                                            const hasNestedTags = node.querySelector('strong, em');
+                                            
+                                            if (!hasNestedTags) {
+                                                // 没有嵌套标签，直接替换文本
+                                                node.textContent = text;
+                                                return true;
+                                            }
+                                        }
+                                        
+                                        // 递归处理子节点
+                                        for (const child of node.childNodes) {
+                                            if (replaceText(child, text)) {
+                                                return true;
+                                            }
+                                        }
+                                    }
+                                    return false;
+                                };
+                                
+                                // 替换第一个文本节点
+                                replaceText(tempContainer, translatedText);
+                                
+                                // 使用处理后的HTML
+                                translatedElement.innerHTML = tempContainer.innerHTML;
+                            }
+                            // 如果有多个带样式的子元素，尝试保留原始格式结构
+                            else if (item.styledChildren.length > 1) {
                                 // 创建一个临时容器来保存翻译后的HTML
                                 const tempContainer = document.createElement('div');
                                 tempContainer.innerHTML = item.html;
@@ -455,17 +575,51 @@ document.addEventListener('DOMContentLoaded', () => {
                                 };
                                 Array.from(tempContainer.childNodes).forEach(walkNodes);
                                 
-                                // 简单地将翻译文本分配给第一个文本节点
-                                // 注意：这是一个简化处理，实际应用中可能需要更复杂的文本分配算法
+                                // 检查是否有加粗元素
+                                const hasBoldElements = item.styledChildren.some(child => 
+                                    child.classList.includes('bold') || 
+                                    (child.styles && child.styles.fontWeight === 'bold') || 
+                                    (child.styles && parseInt(child.styles.fontWeight) >= 700)
+                                );
+                                
+                                console.log('检测到加粗元素:', hasBoldElements);
+                                
                                 if (textNodes.length > 0) {
-                                    if (textNodes[0].nodeType === Node.TEXT_NODE) {
-                                        textNodes[0].textContent = translatedText;
+                                    // 如果有加粗元素，尝试保留加粗格式
+                                    if (hasBoldElements) {
+                                        // 为每个带样式的子元素创建对应的翻译元素
+                                        item.styledChildren.forEach((styledChild, idx) => {
+                                            // 找到对应的DOM元素
+                                            if (idx < textNodes.length) {
+                                                const node = textNodes[idx];
+                                                // 保留原始样式，只替换文本内容
+                                                // 简单处理：将整个翻译文本应用到第一个元素
+                                                if (idx === 0) {
+                                                    if (node.nodeType === Node.TEXT_NODE) {
+                                                        node.textContent = translatedText;
+                                                    } else {
+                                                        node.textContent = translatedText;
+                                                    }
+                                                } else {
+                                                    // 其他元素清空内容
+                                                    if (node.nodeType === Node.ELEMENT_NODE) {
+                                                        node.textContent = '';
+                                                    }
+                                                }
+                                            }
+                                        });
+                                        translatedElement.innerHTML = tempContainer.innerHTML;
                                     } else {
-                                        // 保留span元素的类名和样式属性，只替换文本内容
-                                        const originalSpan = textNodes[0];
-                                        originalSpan.textContent = translatedText;
+                                        // 没有加粗元素，简单替换第一个节点的内容
+                                        if (textNodes[0].nodeType === Node.TEXT_NODE) {
+                                            textNodes[0].textContent = translatedText;
+                                        } else {
+                                            // 保留span元素的类名和样式属性，只替换文本内容
+                                            const originalSpan = textNodes[0];
+                                            originalSpan.textContent = translatedText;
+                                        }
+                                        translatedElement.innerHTML = tempContainer.innerHTML;
                                     }
-                                    translatedElement.innerHTML = tempContainer.innerHTML;
                                 } else {
                                     // 如果没有找到文本节点，直接使用翻译文本
                                     translatedElement.innerHTML = translatedText;
@@ -473,6 +627,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             } else if (item.styledChildren.length === 1) {
                                 // 只有一个带样式的子元素，保留其样式信息
                                 const styledChild = item.styledChildren[0];
+                                
+                                // 检查是否是加粗元素
+                                const isBold = styledChild.classList.includes('bold') || 
+                                    (styledChild.styles && styledChild.styles.fontWeight === 'bold') || 
+                                    (styledChild.styles && parseInt(styledChild.styles.fontWeight) >= 700);
+                                
+                                console.log('检测到单个加粗元素:', isBold);
                                 
                                 // 创建一个新的span元素，保留原始样式
                                 const tempSpan = document.createElement('span');
@@ -486,12 +647,18 @@ document.addEventListener('DOMContentLoaded', () => {
                                     tempSpan.className = styledChild.className;
                                 }
                                 
+                                // 确保加粗类名被正确添加
+                                if (isBold && !tempSpan.classList.contains('bold')) {
+                                    tempSpan.classList.add('bold');
+                                }
+                                
                                 // 应用内联样式
                                 if (styledChild.styles) {
                                     if (styledChild.styles.color) tempSpan.style.color = styledChild.styles.color;
                                     if (styledChild.styles.fontFamily) tempSpan.style.fontFamily = styledChild.styles.fontFamily;
                                     if (styledChild.styles.fontSize) tempSpan.style.fontSize = styledChild.styles.fontSize;
-                                    if (styledChild.styles.fontWeight) tempSpan.style.fontWeight = styledChild.styles.fontWeight;
+                                    if (isBold) tempSpan.style.fontWeight = 'bold';
+                                    else if (styledChild.styles.fontWeight) tempSpan.style.fontWeight = styledChild.styles.fontWeight;
                                     if (styledChild.styles.fontStyle) tempSpan.style.fontStyle = styledChild.styles.fontStyle;
                                     if (styledChild.styles.textDecoration) tempSpan.style.textDecoration = styledChild.styles.textDecoration;
                                 }
@@ -509,8 +676,22 @@ document.addEventListener('DOMContentLoaded', () => {
                                 translatedElement.innerHTML = translatedText;
                             }
                         } else {
-                            // 没有特殊格式，直接设置文本
-                            translatedElement.textContent = translatedText;
+                            // 检查原始元素是否有加粗样式
+                            const isBold = item.styleInfo && 
+                                (item.styleInfo.fontWeight === 'bold' || parseInt(item.styleInfo.fontWeight) >= 700);
+                            
+                            if (isBold) {
+                                // 如果原始元素是加粗的，创建加粗span包裹翻译文本
+                                const boldSpan = document.createElement('span');
+                                boldSpan.classList.add('bold');
+                                boldSpan.style.fontWeight = 'bold';
+                                boldSpan.textContent = translatedText;
+                                translatedElement.innerHTML = boldSpan.outerHTML;
+                                console.log('应用加粗样式到整个翻译元素:', boldSpan.outerHTML);
+                            } else {
+                                // 没有特殊格式，直接设置文本
+                                translatedElement.textContent = translatedText;
+                            }
                         }
                         
                         translatedElement.setAttribute('data-original-index', item.index);
@@ -573,7 +754,90 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const targetLanguageName = languageMap[targetLanguage] || targetLanguage;
         
-        if (modelType === 'openai') {
+        if (modelType === 'volces') {
+            const apiKey = document.getElementById('volces-api-key').value;
+            const model = document.getElementById('volces-model').value;
+            
+            if (!apiKey) {
+                throw new Error('请输入火山引擎 API Key');
+            }
+            
+            try {
+                // 构建更结构化的提示词，明确指示翻译格式要求
+                const prompt = `请将以下${texts.length}段文本翻译成${targetLanguageName}，保持原始格式和语义。
+
+规则：
+1. 只返回翻译结果，不要添加任何解释或额外内容
+2. 保持原文的段落结构，每段翻译后用一个空行分隔
+3. 保持原文的格式和标点符号风格
+4. 确保翻译后的段落数量与原文相同
+
+以下是需要翻译的文本，每段用空行分隔：
+
+${texts.join('\n\n')}
+
+翻译结果：`;
+                
+                const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        messages: [
+                            {role: 'system', content: '你是专业的文档翻译助手，擅长保持原文格式进行高质量翻译。'},
+                            {role: 'user', content: prompt}
+                        ],
+                        temperature: 0.3
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error?.message || '翻译请求失败');
+                }
+                
+                // 解析翻译结果
+                console.log('火山引擎 API 响应数据:', data);
+                
+                if (!data.choices || data.choices.length === 0 || !data.choices[0].message) {
+                    console.error('火山引擎响应格式不正确:', data);
+                    throw new Error('火山引擎响应格式不正确');
+                }
+                
+                const translatedContent = data.choices[0].message.content.trim();
+                console.log('提取的翻译内容:', translatedContent);
+                
+                // 分割翻译内容并确保返回正确数量的段落
+                const translatedParagraphs = translatedContent.split('\n\n');
+                console.log('分割后的段落数量:', translatedParagraphs.length, '原始文本数量:', texts.length);
+                
+                // 如果段落数量不匹配，尝试其他分割方法
+                if (translatedParagraphs.length < texts.length) {
+                    console.log('尝试使用其他分隔符分割翻译内容');
+                    // 尝试使用单个换行符分割
+                    const altSplit = translatedContent.split('\n').filter(line => line.trim() !== '');
+                    if (altSplit.length >= texts.length) {
+                        console.log('使用单个换行符分割成功');
+                        return altSplit.slice(0, texts.length);
+                    }
+                }
+                
+                // 如果段落数量仍然不匹配，确保至少返回一些内容
+                if (translatedParagraphs.length === 0) {
+                    console.log('无法分割翻译内容，返回整个内容作为单个段落');
+                    return [translatedContent];
+                }
+                
+                return translatedParagraphs.slice(0, texts.length);
+            } catch (error) {
+                console.error('火山引擎翻译错误:', error);
+                throw error;
+            }
+        } else if (modelType === 'openai') {
             const apiKey = document.getElementById('openai-api-key').value;
             const model = document.getElementById('openai-model').value;
             
@@ -764,7 +1028,7 @@ ${texts.join('\n\n')}
     
     // 保存为Word文档
     saveBtn.addEventListener('click', async () => {
-        if (!currentFile || !originalDocumentContent.length === 0) {
+        if (!currentFile || originalDocumentContent.length === 0) {
             alert('没有可保存的文档');
             return;
         }
@@ -780,10 +1044,13 @@ ${texts.join('\n\n')}
             });
             
             // 创建新的Word文档
-            if (!window.docx) {
+            // 检查docx库是否正确加载，尝试多种可能的全局变量名
+            const docxLib = window.docx || docx || window.docxjs;
+            if (!docxLib) {
+                console.error('找不到docx库，可能未正确加载');
                 throw new Error('docx库未正确加载，请刷新页面重试');
             }
-            const doc = new window.docx.Document();
+            const doc = new docxLib.Document();
             
             // 根据原始文档结构和翻译内容创建新文档
             // 增强处理，保留更多格式信息
